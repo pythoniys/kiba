@@ -9,6 +9,7 @@ class Brewery(Base):
     name = Column(String, index=True)
     location = Column(String)
     establishment_date = Column(Date)
+        
 
 class BeerType(Base):
     __tablename__ = "beer_types"

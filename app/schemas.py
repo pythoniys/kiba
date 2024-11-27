@@ -7,6 +7,14 @@ class BreweryBase(BaseModel):
     location: Optional[str] = None
     establishment_date: Optional[date] = None
 
+class Brewery(BaseModel):
+    name: str
+    location: str
+    establishment_date: date
+
+class RemainingVolume(BaseModel):
+    remaining_volume: float
+
 class Brewery(BreweryBase):
     id: int
 
