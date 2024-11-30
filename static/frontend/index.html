@@ -15,10 +15,10 @@
 </head>
 <body>
     <div class="container">
-        <h2>Login</h2>
+        <h2>Добро пожаловать&lt;3</h2>
         <input type="text" id="username" placeholder="Username">
         <input type="password" id="password" placeholder="Password">
-        <button onclick="login()">Login</button>
+        <button onclick="login()">Войти</button>
     </div>
 
     <script>
@@ -38,7 +38,7 @@
                 const data = await response.json();
                 localStorage.setItem('token', data.access_token);
                 alert('Login successful! Redirecting...');
-                window.location.href = 'dashboard.html'; // переход на следующую страницу
+                window.location.href = 'static/dashboard.html'; // переход на следующую страницу
             } else {
                 alert('Login failed! Check your credentials.');
             }

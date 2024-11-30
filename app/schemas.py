@@ -15,6 +15,17 @@ class Brewery(BaseModel):
 class RemainingVolume(BaseModel):
     remaining_volume: float
 
+class BatchWithRemainingVolume(BaseModel):
+    batch_id: int
+    beer_type_name: str
+    production_date: date
+    initial_volume: float
+    remaining_volume: Optional[float]
+
+    class Config:
+        orm_mode = True
+
+
 class Brewery(BreweryBase):
     id: int
 

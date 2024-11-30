@@ -12,9 +12,27 @@ from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from pydantic import BaseModel
 from typing import Optional
+from pathlib import Path
+from fastapi.responses import FileResponse
 
 app = FastAPI()
-app.mount("/kibochka", StaticFiles(directory="static/frontend", html=True), name="static")
+
+# static_path = Path(__file__).parent.parent / "static/frontend"
+# app.mount("/", StaticFiles(directory=static_path, html=True), name="static")
+
+# app.mount("/", StaticFiles(directory="static/frontend", html=True), name="static")
+
+# Путь к статическим файлам
+static_path = Path(__file__).parent.parent / "static/frontend"
+
+# Подключаем статические файлы
+app.mount("/static", StaticFiles(directory=static_path), name="static")
+
+# Рендерим index.html на корневом маршруте
+@app.get("/")
+def read_root():
+    return FileResponse(static_path / "index.html")
+
 Base = declarative_base()
 
 app.add_middleware(
@@ -107,18 +125,18 @@ def get_current_user(token: str = Depends(), db: Session = Depends(get_db)):
     return user
 
 
-# @app.post("/register/", response_model=Token)
-# async def register(user: UserCreate, db: Session = Depends(get_db)):
-#     db_user = db.query(User).filter(User.username == user.username).first()
-#     if db_user:
-#         raise HTTPException(status_code=400, detail="Username already registered")
-#     hashed_password = get_password_hash(user.password)
-#     new_user = User(username=user.username, hashed_password=hashed_password)
-#     db.add(new_user)
-#     db.commit()
-#     db.refresh(new_user)
-#     access_token = create_access_token(data={"sub": new_user.username})
-#     return {"access_token": access_token, "token_type": "bearer"}
+@app.post("/register/", response_model=Token)
+async def register(user: UserCreate, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.username == user.username).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Username already registered")
+    hashed_password = get_password_hash(user.password)
+    new_user = User(username=user.username, hashed_password=hashed_password)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    access_token = create_access_token(data={"sub": new_user.username})
+    return {"access_token": access_token, "token_type": "bearer"}
 
 # POST запрос для аутентификации пользователя
 @app.post("/login/", response_model=Token)
@@ -135,23 +153,23 @@ async def login(user: UserCreate, db: Session = Depends(get_db)):
 
 ###########################################################################
 
-# @app.get("/breweries/", response_model=list[schemas.Brewery])
-# def read_breweries(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-#     if Depends(get_current_user) :
-#         breweries = crud.get_breweries(db, skip=skip, limit=limit)
-#         return breweries
+@app.get("/breweries/", response_model=list[schemas.Brewery])
+def read_breweries(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    if Depends(get_current_user) :
+        breweries = crud.get_breweries(db, skip=skip, limit=limit)
+        return breweries
 
-# @app.get("/beer_types/", response_model=list[schemas.BeerType])
-# def read_beer_types(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-#     if Depends(get_current_user):
-#         beer_types = crud.get_beer_types(db, skip=skip, limit=limit)
-#         return beer_types
+@app.get("/beer_types/", response_model=list[schemas.BeerType])
+def read_beer_types(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    if Depends(get_current_user):
+        beer_types = crud.get_beer_types(db, skip=skip, limit=limit)
+        return beer_types
 
-# @app.get("/ingredients/", response_model=list[schemas.Ingredient])
-# def read_ingredients(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-#     if Depends(get_current_user):
-#         ingredients = crud.get_ingredients(db, skip=skip, limit=limit)
-#         return ingredients
+@app.get("/ingredients/", response_model=list[schemas.Ingredient])
+def read_ingredients(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    if Depends(get_current_user):
+        ingredients = crud.get_ingredients(db, skip=skip, limit=limit)
+        return ingredients
 
 @app.get("/remaining_volume/", response_model=schemas.RemainingVolume)
 def read_remaining_volume(batch_id: int, db: Session = Depends(get_db)):
@@ -164,6 +182,11 @@ def read_remaining_volume(batch_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail="Failed to calculate remaining volume")
     
     return {"remaining_volume": remaining_volume}
+
+@app.get("/batches_with_volume/", response_model=list[schemas.BatchWithRemainingVolume])
+def read_batches_with_volume(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    if Depends(get_current_user):
+        return crud.get_batches_with_remaining_volume(db, skip=skip, limit=limit)
 
 # POST запрос для вставки данных
 @app.post("/breweries/")
